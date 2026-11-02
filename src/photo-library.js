@@ -1,0 +1,24 @@
+import {el,button,store} from './core.js';
+import {eventPhotos} from './data/photos.js';
+import {favouriteNames} from './data/favourites.js';
+
+export function safeWebURL(value){try{const url=new URL(value);return ['https:','http:'].includes(url.protocol)?url.href:null;}catch{return null;}}
+export function savedPhotos(){const raw=store.get('photo-library',[]);return Array.isArray(raw)?raw.filter(photo=>photo&&favouriteNames.includes(photo.person)&&typeof photo.event==='string'&&typeof photo.credit==='string'&&safeWebURL(photo.image)&&safeWebURL(photo.source)&&Array.isArray(photo.tiles)&&photo.tiles.every(Number.isInteger)):[];}
+export function allPhotos(){return [...savedPhotos(),...eventPhotos];}
+export function photoFigure(photo){
+  const unavailable=el('p',{class:'hint',text:'Image unavailable here. Open the linked source to view it.',hidden:''});
+  const img=el('img',{src:photo.image,alt:photo.person+' — '+photo.event,loading:'lazy',referrerpolicy:'no-referrer',onError:e=>{e.target.hidden=true;unavailable.hidden=false;}});
+  return el('figure',{class:'event-photo'},[img,unavailable,el('figcaption',{},[el('b',{text:photo.person}),el('p',{text:photo.event+' · '+(photo.attire||'')}),el('a',{href:photo.source,target:'_blank',rel:'noopener noreferrer',text:photo.credit+' ↗'})])]);
+}
+export function photoLibrary(root,{getTiles,onChange}){
+  const section=el('details',{class:'game-panel',style:'margin-top:20px'}),filter=el('input',{type:'search',placeholder:'Search your 316 favourites or their events','aria-label':'Search cast library'}),body=el('div'),matches=el('div',{class:'roster-links'}),message=el('p',{class:'status','aria-live':'polite'});
+  const person=el('select',{'aria-label':'Person in the photograph'},favouriteNames.map(name=>el('option',{value:name,text:name}))),event=el('input',{placeholder:'Event and year','aria-label':'Event and year'}),attire=el('input',{placeholder:'Attire / context','aria-label':'Attire or context'}),image=el('input',{type:'url',placeholder:'Direct image URL','aria-label':'Direct image URL'}),source=el('input',{type:'url',placeholder:'Publisher page or Pinterest pin URL','aria-label':'Photo source URL'}),credit=el('input',{placeholder:'Photographer / publisher credit','aria-label':'Photographer credit'}),tile=el('select',{'aria-label':'Attach photo to career tile'});
+  tile.append(...getTiles().filter(t=>t.type==='property').map(t=>el('option',{value:t.id,text:t.name})));
+  function draw(){const query=filter.value.toLowerCase();body.replaceChildren(...allPhotos().filter(photo=>(photo.person+' '+photo.event+' '+photo.attire).toLowerCase().includes(query)).map(photoFigure));const names=favouriteNames.filter(name=>name.toLowerCase().includes(query));matches.replaceChildren(...names.map(name=>button(name,()=>{person.value=name;filter.value=name;draw();})));if(!body.children.length)body.append(el('p',{class:'hint',text:'No sourced event photo saved for this person yet. Use a discovery link, then add the exact image and its credit below.'}));}
+  const discover=el('div',{class:'controls'});function updateLinks(){discover.replaceChildren(...[['Pinterest','https://www.pinterest.com/search/pins/?q='],['Wikimedia Commons','https://commons.wikimedia.org/w/index.php?search=']].map(([name,base])=>el('a',{href:base+encodeURIComponent(person.value+' '+event.value),target:'_blank',rel:'noopener noreferrer',text:'Find on '+name+' ↗'})));}person.addEventListener('change',updateLinks);event.addEventListener('input',updateLinks);updateLinks();
+  section.append(el('summary',{text:'Your cast / sourced event library'}),el('p',{class:'rules',text:'All 316 IMDb favourites are here. Six curated event references are included. Add more event photos with exact source and photographer credits; assignments persist on this device.'}),filter,matches,body,el('h3',{text:'Add an event photo'}),el('div',{class:'photo-form'},[person,event,attire,discover,image,source,credit,tile]),button('Save photo and attach to tile',()=>{
+    const imageURL=safeWebURL(image.value),sourceURL=safeWebURL(source.value);if(!favouriteNames.includes(person.value)||!event.value.trim()||!credit.value.trim()||!imageURL||!sourceURL){message.textContent='Choose a person and provide an event, image URL, source URL and credit.';return;}
+    const photos=savedPhotos();photos.unshift({id:'custom-'+Date.now(),person:person.value,event:event.value.trim(),attire:attire.value.trim(),image:imageURL,source:sourceURL,credit:credit.value.trim(),tiles:[Number(tile.value)]});
+    if(!store.set('photo-library',photos.slice(0,200))){message.textContent='Could not save: browser storage is unavailable.';return;}message.textContent='Photo and source saved; the career tile now shows it.';onChange();draw();
+  },true),message);filter.addEventListener('input',draw);root.append(section);draw();
+}
