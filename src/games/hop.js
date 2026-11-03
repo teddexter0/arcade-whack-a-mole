@@ -14,6 +14,7 @@ export function hop(root){
   const players=['Player 1','Player 2'],sticks=[2,4],names=['HOP','STEP','JUMP'];
   const opponent=el('select',{'aria-label':'Second player'},[el('option',{value:'friend',text:'Local friend'}),...['easy','medium','hard'].map(value=>el('option',{value,text:'Simulated runner: '+value}))]);
   let simulated=false;
+  stage.classList.add('hop-stage');
   const info=el('div',{class:'scorebar'}),status=el('p',{class:'status','aria-live':'polite'}),scene=el('div',{class:'jump-field'}),runner=el('div',{class:'jump-runner','aria-hidden':'true'}),meterBar=el('div',{class:'progress-fill'}),leaderboard=el('div',{class:'inspect'});
   runner.innerHTML='<svg viewBox="0 0 60 90"><circle cx="31" cy="12" r="9" fill="#262f24"/><path d="M30 26L26 48M28 32L10 40M28 32L45 24M26 48L9 71M26 48L43 63L52 79" fill="none" stroke="#262f24" stroke-width="7" stroke-linecap="round"/><path d="M30 26L26 46" stroke="#ef762a" stroke-width="11"/></svg>';
   const penalty=el('select',{'aria-label':'First two sticks penalty'},[el('option',{value:'warning',text:'First two sticks: warnings'}),el('option',{value:'deduct',text:'First two sticks: −0.5m each'}),el('option',{value:'fail',text:'First two sticks: fail attempt'})]);
@@ -27,7 +28,7 @@ export function hop(root){
     if(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
     runner.animate([{translate:(-distance)+'px 0',rotate:'-12deg'},{translate:(-distance*.48)+'px -'+[35,48,72][index]+'px',rotate:'-5deg',offset:.52},{translate:'0 0',rotate:'8deg'},{translate:'0 0',rotate:'0deg'}],{duration:[330,380,450][index],easing:'ease-out'});
   }
-  function start(){active=true;phase=0;total=0;landings=[];runner.style.left='5%';runner.style.bottom='48px';penalty.disabled=true;opponent.disabled=true;go.textContent='Lock HOP';status.textContent=`${players[turn]}: lock three landings. Aim for 80% on the meter.`;draw();}
+  function start(){active=true;phase=0;total=0;landings=[];runner.style.left='5%';runner.style.removeProperty('bottom');penalty.disabled=true;opponent.disabled=true;go.textContent='Lock HOP';status.textContent=`${players[turn]}: lock three landings. Aim for 80% on the meter.`;draw();}
   function completeJump(){
     active=false;penalty.disabled=false;opponent.disabled=false;
     const result=judgeJump(landings,[...sticks,target],penalty.value,target===null),player=players[turn];results.push({...result,player,landings:[...landings],round});

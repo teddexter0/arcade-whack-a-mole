@@ -15,7 +15,7 @@ export function stickman(root){
   function dash(){if(player.cooldown>0||finished)return;player.dash=.16;player.cooldown=1.5;}
   scope.on(window,'keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(['a','ArrowLeft'].includes(e.key)){held.left=true;e.preventDefault();}if(['d','ArrowRight'].includes(e.key)){held.right=true;e.preventDefault();}if([' ','w','ArrowUp'].includes(e.key)&&!e.repeat){jump();e.preventDefault();}if(e.key==='Shift')dash();});scope.on(window,'keyup',e=>{if(['a','ArrowLeft'].includes(e.key))held.left=false;if(['d','ArrowRight'].includes(e.key))held.right=false;});scope.on(window,'blur',()=>{held.left=false;held.right=false;});
   const touch=el('div',{class:'touch-controls'});for(const[key,label]of[['left','Left'],['right','Right']]){const b=button(label,()=>{});b.classList.add('direction-key','direction-'+key);scope.on(b,'pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);held[key]=true;});scope.on(b,'pointerup',()=>held[key]=false);scope.on(b,'pointercancel',()=>held[key]=false);touch.append(b);}touch.append(button('Jump',jump),button('Dash',dash));stage.append(touch);
-  const animation=loop(scope,dt=>{
+  loop(scope,dt=>{
     time+=dt;if(finished||lives<=0)return;
     const oldBottom=player.y+46;player.cooldown=Math.max(0,player.cooldown-dt);player.dash=Math.max(0,player.dash-dt);player.vx=(held.right?1:0)-(held.left?1:0);player.vx*=player.dash>0?650:250;
     player.vy=player.dash>0?0:bench.run('gravity',{velocity:player.vy,dt});player.x=Math.max(0,player.x+player.vx*dt);player.y+=player.vy*dt;player.ground=false;
@@ -32,5 +32,5 @@ export function stickman(root){
     status.textContent=`${lives} LIVES · CHECKPOINT ${checkpoint/6+1} · ${Math.floor(player.x)}m · DASH ${player.cooldown>0?player.cooldown.toFixed(1)+'s':'READY'} · BEST ${bestScore('stickman',Math.floor(player.x))}`;
     if(finished||lives<=0){ctx.fillStyle='#061225e8';ctx.fillRect(170,180,620,140);ctx.fillStyle='white';ctx.font='bold 32px Arial';ctx.textAlign='center';ctx.fillText(finished?'ROOFTOP RUN COMPLETE':'OUT OF LIVES',480,245);ctx.font='16px Arial';ctx.fillText('Start a new run from the controls.',480,280);}
   });
-  stage.prepend(status);side.append(difficulty,button('New run',reset),button('Pause / resume',()=>animation.toggle()));return()=>scope.dispose();
+  stage.prepend(status);side.append(difficulty,button('New run',reset));return()=>scope.dispose();
 }

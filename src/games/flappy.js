@@ -10,7 +10,7 @@ export function flight(root){
   function flap(){if(over)return;running=true;velocity=-265;}
   function crash(){if(over)return;over=true;for(let i=0;i<35;i++){const a=Math.random()*Math.PI*2,v=50+Math.random()*220;explosion.push({x:190,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1});}}
   scope.on(c,'pointerdown',e=>{e.preventDefault();flap();});scope.on(window,'keydown',e=>{if(e.code==='Space'&&!e.repeat&&!/INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)){e.preventDefault();flap();}});
-  const animation=loop(scope,dt=>{
+  loop(scope,dt=>{
     time+=dt;for(const p of explosion){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.life-=dt;}explosion=explosion.filter(p=>p.life>0);if(!running||over)return;
     velocity=bench.run('velocity',{velocity,dt});y+=velocity*dt;clock-=dt;if(clock<=0){gates.push(gateSpec(sequence++,difficulty.value));clock=difficulty.value==='hard'?1.6:1.95;}
     for(const g of gates){g.x-=g.speed*dt;if(g.kind==='moving')g.y=g.baseY+Math.sin(time*1.7+g.phase)*(difficulty.value==='hard'?45:25);const inside=Math.abs(g.x-190)<44,top=g.y-g.gap/2,bottom=g.y+g.gap/2,needle=g.kind==='spikes'?18:0,fire=g.kind==='fire'&&flameState(time,g.phase)==='on'?g.fire:0;if(inside&&(y-14<top+needle+fire||y+14>bottom-needle-fire))crash();if(g.x+32<172&&!g.scored){g.scored=true;points++;}}
@@ -24,5 +24,5 @@ export function flight(root){
     if(!over){ctx.save();ctx.translate(190,y);ctx.rotate(clamp(velocity/800,-.5,.8));ctx.fillStyle='#ffcf61';ctx.beginPath();ctx.ellipse(0,0,20,16,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d48b39';ctx.beginPath();ctx.ellipse(-7,4,12,7,Math.sin(time*18)*.3,0,Math.PI*2);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(10,-6,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#182d38';ctx.beginPath();ctx.arc(12,-6,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ef663e';ctx.beginPath();ctx.moveTo(18,-2);ctx.lineTo(34,5);ctx.lineTo(18,8);ctx.fill();ctx.restore();}
     for(const p of explosion){ctx.globalAlpha=p.life;ctx.fillStyle=p.life>.5?'#ffd95e':'#f2733d';ctx.fillRect(p.x,p.y,5,5);}ctx.globalAlpha=1;ctx.fillStyle='#ac6248';ctx.fillRect(0,520,960,20);status.textContent=`${points} GATES · ${difficulty.value.toUpperCase()} · BEST ${bestScore('flappy.'+difficulty.value,points)}`;
     if(!running||over){ctx.fillStyle='#0d1327e8';ctx.fillRect(220,180,520,130);ctx.fillStyle='white';ctx.textAlign='center';ctx.font='bold 30px Arial';ctx.fillText(over?'CAUGHT BY THE COURSE':'FLAPPY: AFTERBURN',480,235);ctx.font='15px Arial';ctx.fillText(over?'New run to try again.':'Tap to flap. Watch for the orange warning.',480,275);}
-  });stage.prepend(status);side.append(difficulty,button('Flap',flap,true),button('New run',reset),button('Pause / resume',()=>animation.toggle()));return()=>scope.dispose();
+  });stage.prepend(status);side.append(difficulty,button('Flap',flap,true),button('New run',reset));return()=>scope.dispose();
 }

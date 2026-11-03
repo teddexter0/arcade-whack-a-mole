@@ -20,7 +20,7 @@ export function whale(root){
     if(kind==='cloud')objects.push({x:855,height:height+65,kind:'doughnut',used:false});
   }
   function screenY(height){return 410-(height-camera);}
-  const animation=loop(scope,dt=>{
+  loop(scope,dt=>{
     if(!run.running||run.over)return;
     const before=run.height;stepWhale(run,dt,bench.run('gravity',{}));camera=Math.max(0,run.height-220);spawnClock-=dt;
     if(spawnClock<=0){spawn();spawnClock=.48;}
@@ -53,5 +53,5 @@ export function whale(root){
     hud.textContent=`${run.world.toUpperCase()} · ${Math.floor(run.distance)}m · ${run.doughnuts} DOUGHNUTS · ${run.coins} COINS${run.rush>0?' · SUGAR RUSH '+run.rush.toFixed(1)+'s':''}`;
     if(lastMessage!==run.message){lastMessage=run.message;status.textContent=run.message;}
   });
-  stage.prepend(hud);stage.append(status);side.append(button('Bounce',tap,true),button('New run / bank coins',reset),button('Pause / resume',()=>animation.toggle()),soundButton,el('h3',{text:'The upgrade shop'}),wallet,shop,el('p',{class:'hint',text:'Fan-built browser version. The progression, art and balance here are our implementation; Nickelodeon’s original executable is not embedded.'}));renderShop();scope.cleanup(()=>{if(run.running)finish();audio?.close();});return()=>scope.dispose();
+  stage.prepend(hud);stage.append(status);side.append(button('Bounce',tap,true),button('New run / bank coins',reset),soundButton,el('h3',{text:'The upgrade shop'}),wallet,shop,el('p',{class:'hint',text:'Fan-built browser version. The progression, art and balance here are our implementation; Nickelodeon’s original executable is not embedded.'}));renderShop();scope.cleanup(()=>{if(run.running)finish();audio?.close();});return()=>scope.dispose();
 }

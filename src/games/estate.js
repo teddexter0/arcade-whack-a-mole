@@ -10,6 +10,31 @@ export function estate(root,skin='heroes'){
   const{stage,side}=layout(root,'Local pass-and-play for 2–4 people. Roll, buy or auction, collect rent, complete colour sets, build evenly, trade, mortgage, and manage jail. Click a tile to inspect it. No AI opponents. Saved automatically in this browser.');
   const key='estate.'+skin;let s=store.get(key,null);if(!s||s.version!==1||s.skin!==skin||s.tiles?.length!==40||!Array.isArray(s.players)||s.players.length<2||s.players.length>4||!s.players.every(p=>p&&Number.isFinite(p.cash)&&Number.isInteger(p.pos)&&p.pos>=0&&p.pos<40))s=newEstate(2,skin);prepareEstate(s);let selected=0,auction=null,rolling=false;
   const setup=el('div',{class:'controls'}),count=el('select',{'aria-label':'Player count'},[2,3,4].map(n=>el('option',{value:n,text:n+' players'}))),board=el('div',{class:'monopoly-wrap'}),players=el('div',{class:'player-list'}),status=el('p',{class:'status','aria-live':'polite'}),actions=el('div',{class:'controls'}),property=el('div',{class:'property-panel'}),event=el('img',{class:'event-image',alt:'Artwork for the most recent board event'}),log=el('div',{class:'log'}),trade=el('details'),feedback=el('p',{class:'hint'});
+  stage.classList.add('estate-stage');
+  const viewport=el('div',{class:'estate-viewport',tabindex:'0','aria-label':'Scrollable property board'},[board]);
+  const follow=el('button',{class:'estate-follow',text:'Overview','aria-pressed':'false'});
+  let overview=false, cameraFrame;
+  function focusTile(index,animate=true){
+    cancelAnimationFrame(cameraFrame);
+    cameraFrame=requestAnimationFrame(()=>{
+      const tile=board.children[index+(skin==='heroes'?2:1)];
+      if(overview||!tile||!viewport.scrollTo)return;
+      const view=viewport.getBoundingClientRect(),cell=tile.getBoundingClientRect();
+      viewport.scrollTo({
+        left:viewport.scrollLeft+cell.left-view.left+(cell.width-view.width)/2,
+        top:viewport.scrollTop+cell.top-view.top+(cell.height-view.height)/2,
+        behavior:animate&&!globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'smooth':'instant'
+      });
+    });
+  }
+  scope.on(follow,'click',()=>{
+    overview=!overview;
+    viewport.classList.toggle('overview',overview);
+    follow.textContent=overview?'Follow player':'Overview';
+    follow.setAttribute('aria-pressed',String(overview));
+    if(!overview)focusTile(s.players[s.turn].pos,false);
+  });
+  scope.cleanup(()=>cancelAnimationFrame(cameraFrame));
   const dice=el('div',{class:'estate-dice','aria-label':'Dice'});
   const portraits=new Map();
   const pictures=estateCast[skin];
@@ -18,7 +43,7 @@ export function estate(root,skin='heroes'){
   scope.cleanup(()=>controller.abort());
   const announce=(message)=>{feedback.textContent=message;};
   function mutate(fn){const ok=fn();if(ok===false)announce('Action unavailable: check cash, ownership, turn phase, and even building across the set.');else announce('');render();}
-  function reset(){s=newEstate(Number(count.value),skin);s.players.forEach(p=>p.cash=startingCash);auction=null;selected=0;render();}let resetArmed=false;const resetButton=button('New table',()=>{if(!resetArmed){resetArmed=true;resetButton.textContent='Confirm new table';return;}resetArmed=false;resetButton.textContent='New table';reset();});setup.append(count,resetButton);stage.append(setup,board,status,actions,feedback);side.append(players,property,event,el('h4',{text:'Table log'}),log,trade);
+  function reset(){s=newEstate(Number(count.value),skin);s.players.forEach(p=>p.cash=startingCash);auction=null;selected=0;render();focusTile(0,false);}let resetArmed=false;const resetButton=button('New table',()=>{if(!resetArmed){resetArmed=true;resetButton.textContent='Confirm new table';return;}resetArmed=false;resetButton.textContent='New table';reset();});setup.append(count,resetButton,follow,dice);stage.append(setup,viewport,status,actions,feedback);side.append(players,property,event,el('h4',{text:'Table log'}),log,trade);
   function auctionStart(){let tile;if(s.phase==='end'&&s.auctionQueue.length){tile=s.auctionQueue.shift();s.pending=tile;}else if(s.phase==='purchase')tile=s.pending;else return;const bidder=s.players.findIndex((p,i)=>!p.out&&i>=s.turn);auction={tile,price:0,leader:null,turn:bidder<0?s.players.findIndex(p=>!p.out):bidder,passed:[]};s.phase='auction';render();}
   function auctionAdvance(){const active=s.players.map((p,i)=>!p.out&&!auction.passed.includes(i)?i:null).filter(i=>i!==null);
     const challengers=active.filter(i=>i!==auction.leader);
@@ -30,18 +55,18 @@ export function estate(root,skin='heroes'){
     // Auctions stay in memory while open; close/reload restarts the pending purchase.
     store.set(key,s.phase==='auction'?{...s,phase:'purchase'}:s);
     board.replaceChildren();if(skin==='heroes')board.append(el('img',{src:assets.board,alt:'Avengers board centre',class:'monopoly-bg'}));
-    board.append(el('div',{class:'monopoly-core'},[el('small',{text:skin==='heroes'?'MCU / DCU':'HOLLYWOOD'}),el('span',{text:skin==='heroes'?'MULTIVERSE':'THE A-LIST'}),el('small',{text:'ESTATE CIRCUIT'}),dice]));
+    board.append(el('div',{class:'monopoly-core'},[el('small',{text:skin==='heroes'?'MCU / DCU':'HOLLYWOOD'}),el('span',{text:skin==='heroes'?'MULTIVERSE':'THE A-LIST'}),el('small',{text:'ESTATE CIRCUIT'})]));
     s.tiles.forEach((tile,i)=>{
       const angle=i/40*Math.PI*2-Math.PI/2;
       const name=photoByTile.get(i);
       const photo=eventPhotos.find(photo=>photo.tiles.includes(i));
       const image=portraits.get(name)||photo?.image;
       const cell=el('button',{
-        class:'tile'+(selected===i?' selected':''),
+        class:'tile'+(selected===i?' selected':'')+(s.players[s.turn].pos===i?' player-focus':''),
         style:'--tile-color:'+(groupColors[tile.group]||'#cfdfad')+';left:'+(50+43*Math.cos(angle))+'%;top:'+(50+44*Math.sin(angle))+'%',
         title:i+': '+tile.name+(name?' / '+name:''),
         'aria-label':tile.name,
-        onClick:()=>{if(!rolling){selected=i;render();}}
+        onClick:()=>{if(!rolling){selected=i;render();focusTile(i);}}
       },[
         ...(image?[el('img',{src:image,alt:'',class:'estate-portrait'})]:[]),
         el('span',{class:'estate-tile-label',text:tile.name}),
@@ -85,6 +110,7 @@ export function estate(root,skin='heroes'){
       show(first,second);
       dice.setAttribute('aria-label','Rolled '+first+' and '+second);
       mutate(()=>{const result=rollEstate(s,first,second);selected=s.players[s.turn].pos;return result;});
+      focusTile(selected);
     };
     if(reduced){finish();return;}
     dice.classList.add('rolling');
@@ -102,6 +128,7 @@ export function estate(root,skin='heroes'){
   workbench(root,{title:'Inspect your board economy',source:'src/games/estate.js (view) -> src/games/estate-rules.js (money, ownership and turns)',getState:()=>structuredClone(s),parameters:[{label:'Starting cash for the next new table',min:200,max:5000,step:100,get:()=>1500,set:n=>{startingCash=n;}}]});
   let startingCash=1500;
   render();
+  if(typeof window.location!=='undefined')focusTile(s.players[s.turn].pos,false);
   if(typeof window.location!=='undefined'){
     const queue=[...new Set(pictures)];
     let cursor=0;

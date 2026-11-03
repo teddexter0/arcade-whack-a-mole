@@ -11,15 +11,40 @@ function pause(paused){
  const content=$("#game-content");content.inert=paused;
  for(const animation of content.getAnimations({subtree:true})){if(paused)animation.pause();else animation.play();}
  $("#pause-screen").hidden=!paused;
- $("#game-pause").textContent=paused?"Resume":"Pause";
+ $("#game-pause").setAttribute("aria-label",paused?"Resume game":"Pause game");
  $("#game-pause").setAttribute("aria-pressed",String(paused));
  if(paused)$("#resume-game").focus();
 }
 $("#game-pause").onclick=()=>pause(!gamePaused());
 $("#resume-game").onclick=()=>{pause(false);$("#game-pause").focus();};
-function closeGame(){pause(false);document.body.classList.remove("controls-open");generation++;cleanup();cleanup=()=>{};selectedGame=null;if(dialog.open)dialog.close();}
+function closeGame(){if(ownsFullscreen&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});dialog.classList.remove("immersive");syncFullscreen();pause(false);document.body.classList.remove("controls-open");generation++;cleanup();cleanup=()=>{};selectedGame=null;if(dialog.open)dialog.close();}
 $('#game-settings')?.addEventListener('click',()=>document.body.classList.toggle('controls-open'));
-$('#game-fullscreen')?.addEventListener('click',()=>{if(!document.fullscreenElement)dialog.requestFullscreen?.();else document.exitFullscreen?.();});
+const fullscreenButton=$('#game-fullscreen');
+let ownsFullscreen=false;
+function syncFullscreen(){
+ const expanded=ownsFullscreen||dialog.classList.contains('immersive');
+ fullscreenButton.textContent=expanded?'Exit full screen':'Full screen';
+ fullscreenButton.setAttribute('aria-pressed',String(expanded));
+}
+fullscreenButton.addEventListener('click',async()=>{
+ if(ownsFullscreen){await document.exitFullscreen();return;}
+ if(dialog.classList.contains('immersive')){dialog.classList.remove('immersive');syncFullscreen();return;}
+ try {
+   // A modal dialog cannot itself enter the Fullscreen API.
+   await document.documentElement.requestFullscreen();
+   if(!dialog.open){await document.exitFullscreen();return;}
+   ownsFullscreen=true;
+   dialog.close();
+   dialog.showModal();
+   fullscreenButton.focus();
+ }catch{
+   if(dialog.open)dialog.classList.add('immersive');
+ }
+ syncFullscreen();
+});
+document.addEventListener('fullscreenchange',()=>{
+ if(!document.fullscreenElement){ownsFullscreen=false;syncFullscreen();}
+});
 $('#close-game').addEventListener('click',closeGame);dialog.addEventListener('cancel',()=>closeGame());dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeGame();}});
 $('#game-learn').hidden=!OWNER;
 document.querySelectorAll('[data-owner]').forEach(node=>node.hidden=!OWNER);
