@@ -1,3 +1,104 @@
 [hidden]{display:none!important}body{background:#f1f2ed}.game-top{flex-shrink:0;padding:12px 20px}.game-top h2{font-size:25px}.game-top-actions{flex-wrap:wrap}.game-top-actions button{padding:9px 12px}dialog{width:min(1500px,98vw);height:calc(100dvh - 18px);max-height:none;overflow:hidden;border-radius:20px}dialog[open]{display:flex;flex-direction:column}#game-content{padding:14px;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}.game-layout{height:100%;min-height:0;grid-template-columns:minmax(0,1fr) 270px;gap:16px}.game-layout>section{min-height:0;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:5px;overflow:hidden}.game-layout>aside{overflow:auto;min-height:0;max-height:100%;font-size:14px;padding:15px}.game-layout>aside>button,.game-layout>aside>.controls{margin:5px 0}.game-panel p,.rules{font-size:14px}.scorebar{flex-shrink:0;padding:5px 0;font-size:12px;flex-wrap:wrap}.status{flex-shrink:0;margin:5px 0;min-height:24px;font-size:14px}.canvas-wrap{flex:1;min-height:0;width:100%;max-width:none;display:flex;justify-content:center;background:radial-gradient(ellipse at top,#19364a,#07111d);border:1px solid #ffffff22}canvas{height:100%;width:100%;object-fit:contain;max-width:100%;max-height:100%}.touch-controls{flex-shrink:0;margin:3px 0;gap:9px}.touch-controls button{padding:9px 18px}.controls{margin:5px 0;flex-shrink:0}.sudoku{width:min(100%,calc(100dvh - 210px));margin:4px auto}.merge-grid{width:min(100%,calc(100dvh - 255px));margin:4px auto}.mole-grid{width:min(100%,calc(100dvh - 225px));margin:4px auto}.unblock-board{width:min(100%,calc(100dvh - 245px));height:auto;flex-shrink:1;min-height:0;margin:4px auto}.monopoly-wrap{width:min(100%,calc(100dvh - 245px));max-width:none;flex-shrink:1;min-height:0;margin:auto}.monopoly-wrap .tile span{font-size:clamp(7px,.8vw,12px)}.rps-arena{flex:1;min-height:120px}.rps-stage{font-size:clamp(25px,4vw,58px);letter-spacing:-2px;text-align:center}.rps-hands{font-size:clamp(18px,3vw,36px);text-align:center}.rps-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 0}.rps-choice{font-size:clamp(14px,1.8vw,23px);padding:18px 8px;border:2px solid #a5ac97;background:#fff}.rps-choice.chosen{background:#d6ec7d;border-color:#1c3829;box-shadow:0 0 0 3px #aac84a66}.game-layout>section>.board-grid:not(.sudoku):not(.merge-grid):not(.mole-grid){width:min(100%,calc(100dvh - 220px));margin:5px auto}.jump-field{flex:1;min-height:150px}.game-layout .inspect{max-height:75px;overflow:auto;margin:4px 0;font-size:11px}.card-art{height:220px;background:radial-gradient(ellipse at 40% 10%,#ffffff44,transparent 75%),var(--card-color);perspective:750px;border:1px solid #ffffff70;box-shadow:inset 0 -45px 70px #0002}.card-art:after{content:'';position:absolute;width:85%;height:55%;border:1px solid #ffffff55;border-radius:22px;transform:rotateX(58deg) rotateZ(-26deg);bottom:-5px;left:7%;box-shadow:0 28px 20px #152c3b35;background:linear-gradient(145deg,#ffffff45,#1a314725)}.card-art svg{width:82%;height:88%;transform:rotateX(13deg) rotateY(-15deg) translateZ(40px);filter:drop-shadow(14px 20px 6px #111b2e50);transition:transform .4s}.game-card:hover .card-art svg{transform:rotateX(0) rotateY(7deg) translateY(-9px) scale(1.05)}.card-num{z-index:4;font-size:12px}.card-arrow{z-index:4}.card-info h3{font-size:18px}.card-info p{font-size:12px;line-height:1.5}.card-tag{font-size:10px}.hero h1{font-size:clamp(64px,7vw,108px)}.photo-form input,.photo-form select{min-width:0}.build-workbench{flex-shrink:0;max-height:60vh;overflow:auto}.local-badge{font-size:11px}.jigsaw-tray{display:flex;gap:5px;overflow:auto;flex-shrink:0;padding:5px}.jigsaw-tray button{min-width:42px;padding:6px;border-radius:8px;font-size:11px}.jigsaw-tray button.active{background:#d7ee78}.level-chip{background:#152c3e;color:#cfe5f6;font:12px monospace;padding:5px 12px;border-radius:20px}body.controls-open .game-layout>aside{display:block}@media(max-width:700px){.game-layout{grid-template-columns:1fr}.game-layout>aside{display:none;position:absolute;right:12px;top:77px;bottom:12px;width:min(320px,90%);z-index:30;background:#f7f8f1;box-shadow:-20px 0 40px #0008;border:2px solid #c8d1bd}.game-top{padding:10px}.game-top h2{font-size:19px}.game-top .eyebrow{font-size:8px;letter-spacing:1px}.game-top-actions button{font-size:10px;padding:8px}.monopoly-wrap{width:min(100%,calc(100dvh - 260px))}.card-art{height:180px}.card-info h3{font-size:15px}.card-info p{font-size:11px}.rps-choices{gap:5px}.rps-choice{padding:15px 4px}.topbar nav{gap:12px}.game-layout>section>.status{font-size:12px}.sudoku input{font-size:clamp(15px,3.5vw,23px)}}
 
 .card-art{background:#0b2336}.card-art:after{display:none}.card-art svg{width:100%;height:100%;transform:none;filter:none}.game-card:hover .card-art svg{transform:scale(1.05) translateY(-3px)}.card-num,.card-arrow{color:#d8f4ff}.event-photo img{max-height:240px;object-fit:contain}
+
+/* Readable arcade type and tactile controls across the hub and game dialogs. */
+:root {
+  --display-type: 'Baloo 2', 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif;
+  --ui-type: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--ui-type);
+  font-size: 17px;
+}
+.brand, .hero h1, .card-info h3, .game-top h2, .game-panel h3, .rps-stage {
+  font-family: var(--display-type);
+  font-weight: 800;
+  letter-spacing: .025em;
+  line-height: 1.02;
+}
+.hero h1 { font-size: clamp(3rem, 8vw, 7rem); overflow-wrap: break-word; }
+.brand { font-size: clamp(1.15rem, 3vw, 1.7rem); letter-spacing: .07em; }
+.brand-sub { letter-spacing: .14em; }
+.card-info h3 { font-size: clamp(1.38rem, 2.4vw, 1.8rem); }
+.card-info p, .game-panel p, .game-layout .rules, .game-layout>aside {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.card-tag, .card-num, .game-top .eyebrow { font-size: .78rem; letter-spacing: .08em; }
+.game-top { gap: 10px; }
+.game-top h2 { font-size: clamp(1.45rem, 3.8vw, 2.5rem); }
+.game-top-actions { justify-content: flex-end; }
+.game-top-actions button, .game-layout button, .game-layout select {
+  font-family: var(--ui-type);
+  font-size: .94rem;
+  min-height: 44px;
+}
+.game-layout .scorebar, .game-layout .status { font-size: .92rem; }
+.touch-controls { justify-content: center; }
+.touch-controls button {
+  min-height: 46px;
+  padding: 7px 14px;
+  font-weight: 700;
+  touch-action: manipulation;
+}
+.direction-pad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(64px, 84px));
+  grid-template-areas: '. up .' 'left down right';
+  gap: 5px;
+}
+.touch-controls .direction-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 6px;
+  color: #fff;
+  background: #19263b;
+  border: 1px solid #425576;
+  box-shadow: inset 0 -3px #0d1728;
+}
+.direction-key::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border: solid currentColor;
+  border-width: 2px 2px 0 0;
+  flex: none;
+}
+.direction-up { grid-area: up; }
+.direction-left { grid-area: left; }
+.direction-down { grid-area: down; }
+.direction-right { grid-area: right; }
+.direction-up::before { transform: translateY(2px) rotate(-45deg); }
+.direction-left::before { transform: translateX(2px) rotate(-135deg); }
+.direction-down::before { transform: translateY(-2px) rotate(135deg); }
+.direction-right::before { transform: translateX(-2px) rotate(45deg); }
+.touch-controls .direction-key:active { color: #132034; background: #e1f779; box-shadow: none; }
+.direction-key:focus-visible, .jigsaw-tray button:focus-visible { outline: 3px solid #ef873b; outline-offset: 1px; }
+.jigsaw-stage .canvas-wrap { touch-action: none; }
+.jigsaw-tray { gap: 9px; padding: 6px 4px; scrollbar-color: #7a8baf #e1e5ef; }
+.jigsaw-tray button {
+  flex: 0 0 clamp(102px, 13vw, 138px);
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 3px 5px 5px;
+  color: #fff;
+  background: #19263b;
+  border: 2px solid #46597c;
+  border-radius: 12px;
+  font-size: .86rem;
+}
+.jigsaw-tray button canvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; }
+.jigsaw-tray button.active { color: #101a2b; background: #d7ee78; border-color: #456028; }
+@media (max-width: 700px) {
+  .game-top-actions { gap: 4px; }
+  .game-top-actions button { font-size: .84rem; }
+  #game-content { position: relative; }
+  .game-layout>aside { top: 0; bottom: 0; }
+}
+@media (max-height: 560px) {
+  .direction-pad { grid-template-areas: 'left up down right'; grid-template-columns: repeat(4,minmax(60px, 82px)); }
+  .jigsaw-tray button { flex-basis: 96px; }
+}
+

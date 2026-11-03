@@ -42,8 +42,12 @@ export function directions(stage, scope, handler) {
     if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     if (keys[e.key]) { e.preventDefault(); handler(keys[e.key]); }
   });
-  const row = el('div', { class: 'touch-controls' });
-  for (const [icon, dir] of [['←','left'], ['↑','up'], ['↓','down'], ['→','right']]) row.append(button(icon, () => handler(dir)));
+  const row = el('div', { class: 'touch-controls direction-pad', role: 'group', 'aria-label': 'Directional controls' });
+  for (const [dir, label] of [['up', 'Up'], ['left', 'Left'], ['down', 'Down'], ['right', 'Right']]) {
+    const key = button(label, () => handler(dir));
+    key.classList.add('direction-key', 'direction-' + dir);
+    row.append(key);
+  }
   stage.append(row);
   let start;
   scope.on(stage, 'pointerdown', e => { if (e.target.tagName === 'CANVAS' || e.target.classList.contains('merge-grid') || e.target.closest?.('.merge-grid')) start = [e.clientX, e.clientY]; });
