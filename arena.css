@@ -102,3 +102,100 @@
   .jigsaw-tray button { flex-basis: 96px; }
 }
 
+
+/* The game owns the viewport. Keep controls reachable on short screens. */
+#game-dialog, #game-dialog:fullscreen {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+}
+#game-content { position: relative; }
+.game-layout > section { overflow: auto; overscroll-behavior: contain; }
+.canvas-wrap { min-height: 120px; overflow: hidden; touch-action: none; }
+.merge-grid, .unblock-board { touch-action: none; }
+#pause-screen {
+  position: absolute;
+  inset: 65px 0 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+  background: #0b152ee8;
+  color: white;
+  z-index: 50;
+}
+#pause-screen strong { font: 800 clamp(2.5rem, 8vw, 5rem) var(--display-type); }
+.jigsaw-tray { justify-content: center; }
+.jigsaw-tray button { flex: 0 0 clamp(120px, 22vw, 168px); }
+.jigsaw-stage .controls { justify-content: center; flex-wrap: wrap; }
+.rps-arena {
+  display: grid;
+  align-content: center;
+  gap: 1rem;
+  min-height: 180px;
+  overflow: hidden;
+  border-radius: 24px;
+  color: #fff;
+  background: radial-gradient(ellipse at 45% 20%, #663fa8, transparent 68%), linear-gradient(135deg,#122353,#120d32);
+  box-shadow: inset 0 0 0 2px #d7b5ff66, inset 0 -18px 65px #110b38;
+}
+.rps-hands { font-size: clamp(2.4rem, 8vw, 6rem); filter: drop-shadow(0 10px 8px #0e0626); }
+.rps-stage { color: #f4e4ff; text-shadow: 0 4px #1b114a; letter-spacing: .06em; }
+.monopoly-wrap {
+  container-type: inline-size;
+  position: relative;
+  aspect-ratio: 1;
+  flex: none;
+  background: radial-gradient(ellipse,#355a4c 0%,#172b2b 59%,#101924 100%);
+}
+.monopoly-wrap .tile {
+  position: absolute;
+  transform: translate(-50%,-50%);
+  width: 8.7%;
+  height: 8.7%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--tile-color);
+  border-radius: 8px;
+  background: #25364b;
+  color: white;
+  isolation: isolate;
+  box-shadow: 0 2px 5px #0009;
+}
+.monopoly-wrap .tile.selected { z-index: 3; outline: 2px solid white; }
+.estate-portrait { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 25%; z-index: -1; }
+.monopoly-wrap .tile .estate-tile-label {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 2px;
+  background: #070e1edc;
+  font-size: clamp(5px,1.6cqi,10px);
+  line-height: 1;
+}
+.monopoly-wrap .tile .tokens { position: absolute; top: 0; right: 1px; background: #f7e76d; color: #17213a; border-radius: 50%; }
+.monopoly-core { pointer-events: none; }
+.estate-dice { display: flex; justify-content: center; gap: 8px; min-height: 32px; }
+.estate-dice span { background: #fff4df; color: #17213a; border-radius: 8px; font: 700 clamp(1.4rem,7cqi,3rem)/1 system-ui; padding: 2px 4px; box-shadow: 0 4px #b88865; }
+.estate-dice.rolling span { animation: dice-tumble .23s ease-in-out infinite alternate; }
+.estate-dice.rolling span + span { animation-direction: alternate-reverse; }
+@keyframes dice-tumble { from { transform: translateY(4px) rotate(-20deg); } to { transform: translateY(-7px) rotate(17deg); } }
+.jump-field { background: linear-gradient(#81cdeb 0 48%,#526d62 49% 59%,#a7563c 60% 89%,#4e7c44 90%); }
+@media (max-width: 700px) {
+  #game-content { padding: 8px; }
+  #game-fullscreen { display: none; }
+  .game-top-actions button { padding: 5px 8px; }
+  .monopoly-wrap { width: min(100%, 53dvh); aspect-ratio: 3 / 4; border-radius: 48%; }
+  .monopoly-wrap .tile { width: 10%; height: 7%; }
+  .monopoly-core { max-width: 50%; }
+  .monopoly-core > span { font-size: clamp(13px,5cqi,28px); }
+  .monopoly-core > small { font-size: clamp(7px,2.6cqi,12px); }
+  .direction-pad { grid-template-areas: 'left up down right'; grid-template-columns: repeat(4,minmax(0,1fr)); }
+}
+

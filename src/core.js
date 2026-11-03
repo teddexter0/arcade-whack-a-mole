@@ -14,6 +14,16 @@ export function el(tag, attrs = {}, children = []) {
 export const button = (text, fn, primary = false) => el('button', { text, onClick: fn, class: primary ? 'primary' : '' });
 export const random = n => Math.floor(Math.random() * n);
 export const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+let pausedAt = null, pauseDuration = 0;
+export const gamePaused = () => pausedAt !== null;
+export const gameTime = () => (pausedAt ?? performance.now()) - pauseDuration;
+export function setGamePaused(paused) {
+  if (paused && pausedAt === null) pausedAt = performance.now();
+  if (!paused && pausedAt !== null) {
+    pauseDuration += performance.now() - pausedAt;
+    pausedAt = null;
+  }
+}
 export const store = {
   get(key, fallback) { try { return JSON.parse(localStorage.getItem('dex.' + key)) ?? fallback; } catch { return fallback; } },
   set(key, value) { try { localStorage.setItem('dex.' + key, JSON.stringify(value)); return true; } catch { return false; } }
@@ -21,9 +31,23 @@ export const store = {
 export function session() {
   const controller = new AbortController(); const cleanups = [];
   return {
-    on(target, event, fn, options = {}) { target.addEventListener(event, fn, { ...options, signal: controller.signal }); },
-    interval(fn, ms) { const id = setInterval(fn, ms); cleanups.push(() => clearInterval(id)); return id; },
-    timeout(fn, ms) { const id = setTimeout(fn, ms); cleanups.push(() => clearTimeout(id)); return id; },
+    on(target, event, fn, options = {}) {
+      target.addEventListener(event, e => {
+        if (!gamePaused() || ['keyup','pointerup','pointercancel','lostpointercapture','blur','visibilitychange'].includes(event)) fn(e);
+      }, { ...options, signal: controller.signal });
+    },
+    interval(fn, ms) { const id = setInterval(() => { if (!gamePaused()) fn(); }, ms); cleanups.push(() => clearInterval(id)); return id; },
+    timeout(fn, ms) {
+      const deadline = gameTime() + ms;
+      let id;
+      const run = () => {
+        const remaining = deadline - gameTime();
+        if (gamePaused() || remaining > 0) id = setTimeout(run, Math.max(16, remaining));
+        else fn();
+      };
+      id = setTimeout(run, ms);
+      cleanups.push(() => clearTimeout(id));
+    },
     cleanup(fn) { cleanups.push(fn); },
     dispose() { controller.abort(); cleanups.forEach(fn => fn()); }
   };
@@ -50,13 +74,25 @@ export function directions(stage, scope, handler) {
   }
   stage.append(row);
   let start;
-  scope.on(stage, 'pointerdown', e => { if (e.target.tagName === 'CANVAS' || e.target.classList.contains('merge-grid') || e.target.closest?.('.merge-grid')) start = [e.clientX, e.clientY]; });
-  scope.on(stage, 'pointerup', e => { if (!start) return; const dx = e.clientX-start[0], dy=e.clientY-start[1]; start=null; if (Math.max(Math.abs(dx), Math.abs(dy)) > 25) handler(Math.abs(dx)>Math.abs(dy) ? dx>0?'right':'left' : dy>0?'down':'up'); });
+  scope.on(stage, 'pointerdown', e => {
+    if (e.target.tagName !== 'CANVAS' && !e.target.closest?.('.merge-grid')) return;
+    start = { x:e.clientX, y:e.clientY, id:e.pointerId };
+    e.target.setPointerCapture(e.pointerId);
+  });
+  scope.on(stage, 'pointermove', e => {
+    if (start?.id !== e.pointerId) return;
+    const dx=e.clientX-start.x, dy=e.clientY-start.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    handler(Math.abs(dx)>Math.abs(dy) ? dx>0?'right':'left' : dy>0?'down':'up');
+    start.x=e.clientX;
+    start.y=e.clientY;
+  });
+  scope.on(stage, 'pointerup', () => {start=null;});
   scope.on(stage, 'pointercancel', () => {start=null;});
 }
 export function loop(scope, update, draw) {
   let frame, previous, paused = false, hidden = !!document.hidden;
-  const tick = time => { const dt = previous == null ? 0 : Math.min((time - previous) / 1000, .035); previous=time; if(!paused&&!hidden) update(dt); if(!hidden)draw(); frame=requestAnimationFrame(tick); };
+  const tick = time => { const dt = previous == null ? 0 : Math.min((time - previous) / 1000, .035); previous=time; if(!paused&&!hidden&&!gamePaused()) update(dt); if(!hidden)draw(); frame=requestAnimationFrame(tick); };
   frame=requestAnimationFrame(tick); scope.cleanup(() => cancelAnimationFrame(frame));
   scope.on(document, 'visibilitychange', () => { hidden=document.hidden; previous=undefined; });
   return { toggle() { paused=!paused; previous=undefined; return paused; } };
@@ -67,4 +103,21 @@ export function bestScore(key, value) {
   const before = scoreCache.get(key), best = Math.max(before, value);
   if (best > before) { scoreCache.set(key, best); store.set('best.'+key,best); }
   return best;
+}
+
+export function drawSnakeFace(ctx,x,y,size,direction) {
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(Math.atan2(direction[1],direction[0]));
+  for (const offset of [-.18,.18]) {
+    ctx.fillStyle='#fff';
+    ctx.beginPath();
+    ctx.arc(size*.11,size*offset,size*.12,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#101a2a';
+    ctx.beginPath();
+    ctx.arc(size*.15,size*offset,size*.065,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
 }

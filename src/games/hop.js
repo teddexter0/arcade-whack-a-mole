@@ -18,7 +18,15 @@ export function hop(root){
   runner.innerHTML='<svg viewBox="0 0 60 90"><circle cx="31" cy="12" r="9" fill="#262f24"/><path d="M30 26L26 48M28 32L10 40M28 32L45 24M26 48L9 71M26 48L43 63L52 79" fill="none" stroke="#262f24" stroke-width="7" stroke-linecap="round"/><path d="M30 26L26 46" stroke="#ef762a" stroke-width="11"/></svg>';
   const penalty=el('select',{'aria-label':'First two sticks penalty'},[el('option',{value:'warning',text:'First two sticks: warnings'}),el('option',{value:'deduct',text:'First two sticks: −0.5m each'}),el('option',{value:'fail',text:'First two sticks: fail attempt'})]);
   let bench;
-  function draw(){scene.replaceChildren(runner);const visible=[0,...sticks,...(target===null?[]:[target])];for(const distance of visible)scene.append(el('div',{class:'jump-stick',text:distance.toFixed(2)+'m',style:`left:${5+distance/15*88}%`}));info.textContent=`ROUND ${round} · ${players[turn]} · ${target===null?'OPENING: SET THE EXTENDER':`FINAL STICK ${target.toFixed(2)}m · ${extender}`}`;leaderboard.textContent=results.slice(-6).map(r=>`${r.player}: ${r.landings.map(n=>n.toFixed(2)).join(' → ')}m · ${r.passed?'clear':'failed'} · warnings ${r.warnings}`).join('\n')||'The first round establishes the longest jump.';}
+  function draw(){while(scene.lastChild&&scene.lastChild!==runner)scene.lastChild.remove();if(!scene.firstChild)scene.append(runner);const visible=[0,...sticks,...(target===null?[]:[target])];for(const distance of visible)scene.append(el('div',{class:'jump-stick',text:distance.toFixed(2)+'m',style:`left:${5+distance/15*88}%`}));info.textContent=`ROUND ${round} · ${players[turn]} · ${target===null?'OPENING: SET THE EXTENDER':`FINAL STICK ${target.toFixed(2)}m · ${extender}`}`;leaderboard.textContent=results.slice(-6).map(r=>`${r.player}: ${r.landings.map(n=>n.toFixed(2)).join(' → ')}m · ${r.passed?'clear':'failed'} · warnings ${r.warnings}`).join('\n')||'The first round establishes the longest jump.';}
+  function landRunner(from,to,index){
+    const delta=(to-from)/15*88;
+    runner.style.left=(5+to/15*88)+'%';
+    runner.getAnimations?.().forEach(animation=>animation.cancel());
+    const distance=scene.clientWidth*delta/100;
+    if(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
+    runner.animate([{translate:(-distance)+'px 0',rotate:'-12deg'},{translate:(-distance*.48)+'px -'+[35,48,72][index]+'px',rotate:'-5deg',offset:.52},{translate:'0 0',rotate:'8deg'},{translate:'0 0',rotate:'0deg'}],{duration:[330,380,450][index],easing:'ease-out'});
+  }
   function start(){active=true;phase=0;total=0;landings=[];runner.style.left='5%';runner.style.bottom='48px';penalty.disabled=true;opponent.disabled=true;go.textContent='Lock HOP';status.textContent=`${players[turn]}: lock three landings. Aim for 80% on the meter.`;draw();}
   function completeJump(){
     active=false;penalty.disabled=false;opponent.disabled=false;
@@ -33,10 +41,10 @@ export function hop(root){
     if(simulated||winner!==null)return;
     if(!active&&turn===1&&opponent.value!=='friend'){
       simulated=true;start();opponent.disabled=true;go.disabled=true;players[1]='Runner ('+opponent.value+')';
-      for(let i=0;i<3;i++)scope.timeout(()=>{total+=bench.run('distance',{precision:opponentPrecision(opponent.value)});landings.push(total);phase++;runner.style.left=`${5+total/15*88}%`;status.textContent=`${players[1]} ${names[i]}: ${total.toFixed(2)}m`;if(i===2){simulated=false;go.disabled=false;completeJump();}},450*(i+1));return;
+      for(let i=0;i<3;i++)scope.timeout(()=>{const from=total;total+=bench.run('distance',{precision:opponentPrecision(opponent.value)});landings.push(total);phase++;landRunner(from,total,i);status.textContent=`${players[1]} ${names[i]}: ${total.toFixed(2)}m`;if(i===2){simulated=false;go.disabled=false;completeJump();}},450*(i+1));return;
     }
     if(!active){start();return;}
-    const precision=clamp(1-Math.abs(meter-.8)/.8,0,1),distance=bench.run('distance',{precision});total+=distance;landings.push(total);runner.style.left=`${5+total/15*88}%`;runner.animate([{translate:'0 0'},{translate:'0 -65px'},{translate:'0 0'}],{duration:420,easing:'ease-out'});phase++;
+    const precision=clamp(1-Math.abs(meter-.8)/.8,0,1),distance=bench.run('distance',{precision});const from=total;total+=distance;landings.push(total);landRunner(from,total,phase);phase++;
     if(phase<3){go.textContent='Lock '+names[phase];status.textContent=`${names[phase-1]} landed at ${total.toFixed(2)}m. Next: ${names[phase]}.`;return;}
     completeJump();
   },true);

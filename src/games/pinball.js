@@ -12,7 +12,7 @@ export function pinball(root){
   const speed=el('select',{'aria-label':'Table speed'},[el('option',{value:'.7',text:'Chill · 70% speed'}),el('option',{value:'1',text:'Classic · normal speed'}),el('option',{value:'1.2',text:'Arcade · fast'})]),strength=el('input',{type:'range',min:'45',max:'100',value:'70','aria-label':'Plunger strength'}),reactors=[[145,195],[355,195],[250,305]];
   function serve(){ball={x:461,y:620,vx:0,vy:0,r:8};waiting=true;trail=[];}
   function reset(){score=0;balls=3;over=false;multiplier=1;lit=new Set();flashes=[];particles=[];serve();}reset();
-  function launch(){if(over||!waiting)return;waiting=false;ball.vy=-(440+Number(strength.value)*2);ball.vx=-35-random(25);saveUntil=time+4;}
+  function launch(){if(over||!waiting)return;waiting=false;ball.vy=-(590+Number(strength.value));ball.vx=0;saveUntil=time+4;}
   const bench=workbench(root,{title:'Pinball contacts and momentum',source:'src/games/pinball.js: railBounce()',getState:()=>({ball:{...ball},score,balls,waiting,multiplier,reactors:[...lit]}),rules:{bumper:{label:'Score after a reactor hit',initial:'score + 100 * multiplier',samples:[{score:0,multiplier:1}],validate:n=>Number.isFinite(n)&&n>=0}}});
   function spark(x,y,color){flashes.push({x,y,life:1,color});for(let i=0;i<18;i++){const a=Math.random()*Math.PI*2,v=40+Math.random()*140;particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.8,color});}shake=3;}
   scope.on(window,'keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(['a','ArrowLeft'].includes(e.key)){e.preventDefault();left=true;}if(['d','ArrowRight'].includes(e.key)){e.preventDefault();right=true;}if(e.code==='Space'){e.preventDefault();launch();}});scope.on(window,'keyup',e=>{if(['a','ArrowLeft'].includes(e.key))left=false;if(['d','ArrowRight'].includes(e.key))right=false;});scope.on(window,'blur',()=>{left=false;right=false;});
@@ -27,7 +27,7 @@ export function pinball(root){
     for(let sub=0;sub<6;sub++){
       ball.vy+=300*step;ball.vx*=.9998;ball.x+=ball.vx*step;ball.y+=ball.vy*step;
       for(const rail of staticRails)railBounce(ball,...rail);
-      if(ball.y<50&&ball.x>420){ball.vx-=200*step;}
+      if(ball.y<180&&ball.x>435&&ball.vy<0){ball.vx=-270-random(30);ball.vy=-140;}
       for(let i=0;i<reactors.length;i++){const[x,y]=reactors[i],dx=ball.x-x,dy=ball.y-y,d=Math.hypot(dx,dy);if(d<36&&d>0){const nx=dx/d,ny=dy/d,v=ball.vx*nx+ball.vy*ny;ball.x=x+nx*37;ball.y=y+ny*37;if(v<0){ball.vx-=1.8*v*nx;ball.vy-=1.8*v*ny;ball.vx+=nx*60;ball.vy+=ny*60;score=bench.run('bumper',{score,multiplier});lit.add(i);spark(x,y,['#68eaff','#ff73ca','#efd26b'][i]);if(lit.size===3){multiplier=Math.min(5,multiplier+1);lit.clear();score+=500;}}}}
       flippers().forEach((f,i)=>{if(railBounce(ball,...f,.88)){const angular=i===0?Math.abs(leftAngle-oldLeft):Math.abs(rightAngle-oldRight);if((i===0?left:right)&&angular>.002){const kick=Math.min(330,angular/Math.max(dt,.001)*25);ball.vy-=kick;ball.vx+=(i===0?1:-1)*kick*.18;}}});
       const v=Math.hypot(ball.vx,ball.vy);if(v>720){ball.vx*=720/v;ball.vy*=720/v;}
@@ -49,5 +49,5 @@ export function pinball(root){
     ctx.fillStyle='#cae8f6';ctx.textAlign='center';ctx.font='bold 17px Arial';ctx.fillText('C I V I L   W A R',250,110);ctx.font='11px monospace';ctx.fillText('REACTOR CIRCUIT / '+multiplier+'× MULTIPLIER',250,134);
     if(waiting){ctx.fillStyle='#030d20e8';ctx.fillRect(70,395,360,90);ctx.fillStyle='white';ctx.font='bold 24px Arial';ctx.fillText(over?'TABLE COMPLETE':'LAUNCH WHEN READY',250,436);ctx.font='13px Arial';ctx.fillText(over?'Start a new table to play again.':'Space / Launch · A and D control the flippers',250,462);}ctx.restore();status.textContent=`${score} POINTS · ${balls} BALLS · ${multiplier}× · BEST ${bestScore('pinball',score)}`;
   });
-  stage.prepend(status);side.append(speed,el('label',{text:'Plunger strength'},[strength]),button('Launch ball',launch,true),button('New game',reset),button('Pause / resume',()=>animation.toggle()));return()=>scope.dispose();
+  stage.prepend(status);touch.append(button('Launch ball',launch,true));side.append(speed,el('label',{text:'Plunger strength'},[strength]),button('New game',reset),button('Pause / resume',()=>animation.toggle()));return()=>scope.dispose();
 }

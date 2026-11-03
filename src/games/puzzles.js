@@ -53,5 +53,5 @@ export function unblock(root){
   function move(delta){const next=moveBlock(blocks,selected,delta);if(JSON.stringify(next)===JSON.stringify(blocks))return;history.push(blocks);blocks=next;moves++;render();}
   scope.on(board,'pointerup',e=>{if(!drag)return;const b=blocks.find(b=>b.id===drag.id);selected=drag.id;const delta=Math.round((b.axis==='h'?e.clientX-drag.x:e.clientY-drag.y)/(board.clientWidth/6));drag=null;move(delta);render();});scope.on(board,'pointercancel',()=>drag=null);
   directions(stage,scope,dir=>{const b=blocks.find(b=>b.id===selected);if((b.axis==='h'&&['left','right'].includes(dir))||(b.axis==='v'&&['up','down'].includes(dir)))move(['left','up'].includes(dir)?-1:1);});
-  stage.prepend(board,status);side.append(levels,button('Reset puzzle',reset),button('Undo',()=>{if(history.length){blocks=history.pop();moves--;render();}}));reset();return()=>scope.dispose();
+  stage.prepend(board,status);side.append(levels,button('Next layout',()=>{levels.value=(Number(levels.value)+1)%unblockLevels.length;reset();}),button('Reset puzzle',reset),button('Undo',()=>{if(history.length){blocks=history.pop();moves--;render();}}));reset();return()=>scope.dispose();
 }

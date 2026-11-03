@@ -1,1 +1,1 @@
-{"name":"advanced-mini-games","version":"2.0.0","type":"module","private":true,"scripts":{"start":"npx serve ."}}
+{"name":"arcade-mole","version":"2.0.0","type":"module","private":true,"scripts":{"start":"npx serve ."}}

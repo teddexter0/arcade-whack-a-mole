@@ -1,4 +1,4 @@
-import {el,button,$,store} from './core.js';
+import {el,button,$,store,setGamePaused,gamePaused} from './core.js';
 import {games,artwork,lessonFor} from './catalog.js';
 import {assets,missingArt} from './assets.js';
 import {favouriteNames} from './data/favourites.js';
@@ -6,7 +6,18 @@ import {eventPhotos} from './data/photos.js';
 import site from '../site-config.js';
 const OWNER=globalThis.__DEX_OWNER__===true;
 const app=$('#app'),dialog=$('#game-dialog');let cleanup=()=>{},viewCleanup=()=>{},selectedGame=null,generation=0;
-function closeGame(){generation++;cleanup();cleanup=()=>{};selectedGame=null;if(dialog.open)dialog.close();}
+function pause(paused){
+ setGamePaused(paused);
+ const content=$("#game-content");content.inert=paused;
+ for(const animation of content.getAnimations({subtree:true})){if(paused)animation.pause();else animation.play();}
+ $("#pause-screen").hidden=!paused;
+ $("#game-pause").textContent=paused?"Resume":"Pause";
+ $("#game-pause").setAttribute("aria-pressed",String(paused));
+ if(paused)$("#resume-game").focus();
+}
+$("#game-pause").onclick=()=>pause(!gamePaused());
+$("#resume-game").onclick=()=>{pause(false);$("#game-pause").focus();};
+function closeGame(){pause(false);document.body.classList.remove("controls-open");generation++;cleanup();cleanup=()=>{};selectedGame=null;if(dialog.open)dialog.close();}
 $('#game-settings')?.addEventListener('click',()=>document.body.classList.toggle('controls-open'));
 $('#game-fullscreen')?.addEventListener('click',()=>{if(!document.fullscreenElement)dialog.requestFullscreen?.();else document.exitFullscreen?.();});
 $('#close-game').addEventListener('click',closeGame);dialog.addEventListener('cancel',()=>closeGame());dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeGame();}});
@@ -14,7 +25,7 @@ $('#game-learn').hidden=!OWNER;
 document.querySelectorAll('[data-owner]').forEach(node=>node.hidden=!OWNER);
 $('#game-learn').textContent='Build mode';
 $('#game-learn').addEventListener('click',()=>{const bench=$('#game-content .build-workbench');if(bench){bench.open=!bench.open;if(bench.open)bench.scrollIntoView({block:'start',behavior:'smooth'});}else{const id=lessonFor[selectedGame]||'collision';closeGame();location.hash='learn/'+id;}});
-async function openGame(game){closeGame();const token=++generation;selectedGame=game.id;$('#game-title').textContent=game.name;$('#game-category').textContent=game.category+' / '+game.tag;const content=$('#game-content');content.replaceChildren(el('p',{text:'Setting up your game…'}));dialog.showModal();
+async function openGame(game){closeGame();const token=++generation;selectedGame=game.id;$('#game-title').textContent=game.name;$('#game-category').textContent=game.category+' / '+game.tag;const content=$('#game-content');content.replaceChildren(el('p',{text:'Setting up your game…'}));content.dataset.game=game.id;dialog.showModal();
  try{let mount;
   if(['merge','sudoku','pop','unblock'].includes(game.id)){const mod=await import('./games/puzzles.js');mount=mod[game.id];}
   else if(['rps','mole','hop'].includes(game.id)){const mod=await import('./games/quick.js');mount=mod[game.id];}
@@ -53,8 +64,8 @@ function credits(){
  ['Kenyan hop–step–and–jump','The opening round establishes the longest jumper as extender. Later final landings must be beyond the final stick; landing on it or short fails. A longer successful jump moves the stick. First/second-stick penalties default to warnings and can be set to deductions or failed attempts.'],
  ['Talking Tom references','The clarified numbered-tile game uses equal-number merges, new tiles after successful moves, and loss when no legal moves remain. Current art is original; it does not claim to be Talking Tom’s extracted executable.'],
  ['Monopoly ruleset','Two local board skins share one economy. It supports buying, rent, cash auctions, even building, limited house/hotel supply, trading unmortgaged undeveloped deeds, mortgage redemption, jail, doubles, debt and bankruptcy. Cards use finite shuffled decks, including held jail-free cards. Bank-owned bankruptcy deeds enter an auction queue. Differences from full classic rules: no mortgage-transfer trading/interest or building-scarcity auctions. Only the current player manages their deeds. Not a full official implementation.'],
- ['Hollywood people and events',`All ${favouriteNames.length} IMDb favourites were read in the browser after the text-fetch route failed. ${eventPhotos.length} event-photo references are wired to relevant tiles with source credits. The remaining cast imagery is unfinished. Award and career tiles are thematic; scandal cards are fictional and are not allegations about real people.`],
- ['Branding','The orange rounded wordmark and monochrome buttons are original treatments inspired by your visual direction. Exact Nickelodeon and Cartoon Network typefaces were not supplied. No third-party font is downloaded.'],
+ ['Hollywood people and events',`All ${favouriteNames.length} IMDb favourites were read in the browser after the text-fetch route failed. ${eventPhotos.length} event-photo references are wired to relevant tiles with source credits. Property tiles use sourced event images or TMDB cast portraits. Award and career tiles are thematic; scandal cards are fictional and are not allegations about real people.`],
+ ['Branding','The orange rounded wordmark and monochrome buttons are original treatments inspired by your visual direction. Exact Nickelodeon and Cartoon Network typefaces were not supplied. Display typography uses Baloo 2 and Outfit.'],
  ['Saves and accounts','Game saves, best scores, lesson progress, calendar notes and completed focus counts stay in this browser. No accounts, analytics, AI services, paid APIs, or online multiplayer. Local storage can be edited or cleared.']])page.append(el('h3',{text:title}),el('p',{text:body,class:'rules'}));
  page.append(el('h2',{text:'References checked'}),el('p',{class:'rules'},[el('a',{href:'https://apps.apple.com/mu/app/sky-whale-a-game-shakers-app/id969247886',target:'_blank',rel:'noopener',text:'Official Sky Whale listing ↗'}),' · ',el('a',{href:'https://www.hasbro.com/common/instruct/Monopoly.pdf',target:'_blank',rel:'noopener',text:'Hasbro Monopoly rules ↗'}),' · ',el('a',{href:'https://www.hsx.com/about/',target:'_blank',rel:'noopener',text:'Hollywood Stock Exchange precedent ↗'}),' · ',el('a',{href:'https://boardgamegeek.com/boardgame/56787/monopoly-hollywood-edition',target:'_blank',rel:'noopener',text:'Monopoly: Hollywood Edition (1997) ↗'})]));
 }
