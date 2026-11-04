@@ -300,3 +300,73 @@
   .estate-viewport.overview .monopoly-wrap { width: min(100%,calc((100dvh - 250px) * .75)); }
 }
 
+
+.hop-stage .jump-field { flex: 1 0 160px; min-height: 160px; }
+.hop-stage > *:not(.jump-field) { flex-shrink: 0; }
+.hop-stage .hop-meter {
+  position: relative;
+  height: 32px;
+  margin-block: 4px;
+  border: 2px solid #879cae;
+  border-radius: 8px;
+  background: #122239;
+  overflow: visible;
+}
+.hop-meter .progress-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg,#36b7ff,#57e784,#ffad38); }
+.hop-meter-target {
+  position: absolute; inset: 0 auto 0 80%; transform: translateX(-50%);
+  display: grid; place-items: center; padding: 0 4px;
+  border-inline: 2px solid #ffe343; color: #fff;
+  background: #302605; font-weight: 800; pointer-events: none;
+}
+.estate-stage { position: relative; }
+.estate-stage .estate-card {
+  position: absolute; z-index: 9; top: 36%; left: 50%; transform: translate(-50%,-25%);
+  width: min(88%,380px); padding: 16px; border: 1px solid #f5d47b;
+  border-radius: 14px; background: #101b30f5; color: #fef6dc;
+  box-shadow: 0 14px 45px #0009;
+}
+.estate-card > button { float: right; font-size: .8rem; }
+.estate-card h3 { clear: both; margin: 4px 0; font-size: 1.35rem; }
+.estate-card small { color: #f3d97d; letter-spacing: .13em; }
+.estate-moving-token {
+  display: none; position: absolute; z-index: 7;
+  transform: translate(-50%,-65%); transition: left 210ms linear,top 210ms linear;
+  pointer-events: none; border: 2px solid #ffdc67; border-radius: 50%;
+  background: #151b2b; color: #ffe67f; font-size: 24px; padding: 1px 9px;
+  box-shadow: 0 0 20px #ffcf58;
+}
+.estate-moving-token.moving { display: block; }
+.estate-stage .monopoly-wrap .route-lit { outline: 3px solid #ffd966; box-shadow: 0 0 16px #ffe687; z-index: 5; }
+
+
+.pinata-win{position:absolute;inset:0;z-index:40;pointer-events:none;overflow:hidden;display:grid;place-items:center;isolation:isolate;animation:pinata-lifetime 4s both}
+.pinata-win i{position:absolute;left:50%;top:42%;width:10px;height:17px;background:hsl(var(--h) 90% 60%);animation:pinata-shower 1.85s cubic-bezier(.11,.64,.38,1) var(--delay) both}
+.pinata-win i:nth-of-type(3n){border-radius:50%;width:9px;height:9px}
+.pinata-title{z-index:2;padding:.45em .8em;border-radius:.35em;background:#101b30;color:white;box-shadow:0 8px 35px #0008;font:900 clamp(1.5rem,5vw,3.8rem)/1.1 system-ui;text-align:center}
+.pinata-center{position:absolute;top:35%;font-size:4rem;color:#ffdc62;text-shadow:0 0 20px #ffa32b;animation:pinata-burst .65s both}
+.assemble-win .pinata-title{white-space:nowrap;text-transform:uppercase;letter-spacing:-.045em;font:italic 1000 clamp(1.2rem,6vw,4.5rem)/1.08 Impact,'Arial Black',sans-serif;background:linear-gradient(100deg,#f43e62,#ffad45,#ffe44f,#64ea9e,#62cdff,#c092ff);color:#0e1730;animation:assemble-fly 3.4s both}
+@keyframes pinata-lifetime{0%,85%{opacity:1}100%{opacity:0}}
+@keyframes pinata-shower{0%{opacity:0;transform:scale(.1)}12%{opacity:1}58%{opacity:1;transform:translate(var(--x),var(--y)) rotate(var(--spin))}100%{opacity:0;transform:translate(var(--x),calc(var(--y) + 120px)) rotate(var(--spin))}}
+@keyframes pinata-burst{0%{transform:scale(.2)}45%{transform:scale(1.6);opacity:1}100%{transform:scale(2);opacity:0}}
+@keyframes assemble-fly{0%{transform:translateX(-100vw) skew(-10deg)}23%,73%{transform:translateX(0) skew(-7deg)}100%{transform:translateX(100vw) skew(-10deg)}}
+.estate-event-popup{position:absolute;z-index:12;top:43%;left:50%;transform:translate(-50%,-45%);width:min(85%,520px);padding:12px;display:grid;gap:8px;justify-items:center;border-radius:14px;background:#101b30;box-shadow:0 15px 55px #000b}
+.estate-event-popup img{width:100%;max-height:44dvh;object-fit:contain}
+.estate-stage .monopoly-wrap .player-focus,.estate-stage .monopoly-wrap .route-lit{border-color:var(--avatar-color);outline-color:var(--avatar-color);box-shadow:0 0 20px var(--avatar-color)}
+.estate-stage .monopoly-wrap .tile .tokens{display:flex;gap:2px;background:transparent}
+.estate-stage .monopoly-wrap .tile .estate-avatar,.estate-moving-token{background:var(--avatar-color);color:#111827;border-color:#111827}
+.estate-stage .monopoly-wrap .tile .estate-avatar{padding:1px 4px;border-radius:12px;font-size:inherit}
+.estate-card-draw{border-left:3px solid #ffcf65;padding:.5em .7em;background:#23324a}
+.hop-clouds{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.hop-clouds i{position:absolute;top:calc(12% + 8% * var(--cloud));left:0;width:64px;height:16px;border-radius:40px;background:#eff9ffbe;box-shadow:13px -9px 0 -2px #eff9ffbe,30px -4px 0 -2px #eff9ffbe;animation:hop-cloud-drift calc(15s + var(--cloud)*4s) linear infinite;animation-delay:calc(var(--cloud)*-6s)}
+@keyframes hop-cloud-drift{from{left:-90px}to{left:calc(100% + 90px)}}
+.hop-landing{position:absolute;bottom:calc(20% + var(--landing-row)*1.25rem);transform:translateX(-50%);z-index:2;white-space:nowrap;font-size:clamp(.55rem,1.9vw,.75rem);font-weight:800;color:#fff7d0;background:#122239;border-bottom:2px solid #ffdf58;padding:2px 4px;border-radius:4px}
+.parkour-touch{display:none}
+@media(max-width:760px),(pointer:coarse){
+ .parkour-touch{display:flex;align-items:center;justify-content:center;gap:12px;flex-shrink:0}
+ .parkour-stick{position:relative;display:grid;place-items:center;width:104px;height:104px;border-radius:50%;touch-action:none;user-select:none;background:radial-gradient(circle,#263b59,#0c162d);border:2px solid #6a8cb2;box-shadow:inset 0 0 18px #000a}
+ .parkour-knob{pointer-events:none;width:48px;height:48px;border-radius:50%;border:2px solid #afdcfb;background:radial-gradient(circle at 32% 25%,#9bddff,#3e74af 70%);box-shadow:0 3px 12px #0009}
+}
+#game-content:has(~ #pause-screen:not([hidden])) .hop-clouds i{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.pinata-win i,.pinata-center{display:none}.assemble-win .pinata-title,.hop-clouds i{animation:none}.estate-moving-token{transition:none}}
+

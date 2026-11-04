@@ -1,4 +1,4 @@
-import {el,button,layout,session,canvas,loop,random,clamp,bestScore} from '../core.js';
+import {celebrate,el,button,layout,session,canvas,loop,random,clamp,bestScore} from '../core.js';
 import {workbench} from '../workbench.js';
 export function gateSpec(index,difficulty='normal',rng=Math.random){const d={easy:{gap:205,speed:135,fire:28},normal:{gap:180,speed:160,fire:38},hard:{gap:160,speed:190,fire:45}}[difficulty]||{gap:180,speed:160,fire:38};const y=135+rng()*230;return{...d,x:1000,y,baseY:y,kind:index%4===0?'spikes':index%4===1?'fire':index%4===2?'moving':'plain',scored:false,phase:rng()*2.8};}
 export function flameState(time,phase=0){const t=(time+phase)%2.8;return t>=1.9&&t<2.5?'on':t>=1.45&&t<1.9?'warning':'off';}
@@ -6,9 +6,9 @@ export function flight(root){
   const scope=session(),{stage,side}=layout(root,'Tap, click or Space to flap. Needle gates, moving gaps and flame jets rotate through the course. Orange mouths warn before flames fire. Difficulty changes gap size, speed and flame length.');
   const{c,ctx}=canvas(stage,960,540),status=el('div',{class:'scorebar'}),difficulty=el('select',{'aria-label':'Flight difficulty'},['easy','normal','hard'].map(v=>el('option',{value:v,text:v})));difficulty.value='normal';let y=260,velocity=0,gates=[],points=0,over=false,running=false,clock=0,time=0,sequence=0,explosion=[];
   const bench=workbench(root,{title:'Flappy traps and flight',source:'src/games/flappy.js: gateSpec(), flameState()',getState:()=>({y,velocity,gates:structuredClone(gates),points,over,running}),rules:{velocity:{label:'Velocity under gravity',initial:'velocity + 620 * dt',samples:[{velocity:0,dt:.016}],validate:n=>Number.isFinite(n)&&Math.abs(n)<10000}}});
-  function reset(){y=260;velocity=0;gates=[];points=0;over=false;running=false;clock=0;time=0;sequence=0;explosion=[];}
+  let recordScore;function reset(){recordScore=bestScore('flappy.'+difficulty.value,0);y=260;velocity=0;gates=[];points=0;over=false;running=false;clock=0;time=0;sequence=0;explosion=[];}
   function flap(){if(over)return;running=true;velocity=-265;}
-  function crash(){if(over)return;over=true;for(let i=0;i<35;i++){const a=Math.random()*Math.PI*2,v=50+Math.random()*220;explosion.push({x:190,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1});}}
+  function crash(){if(over)return;over=true;if(points>recordScore)celebrate(root,'New flight record!');for(let i=0;i<35;i++){const a=Math.random()*Math.PI*2,v=50+Math.random()*220;explosion.push({x:190,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1});}}
   scope.on(c,'pointerdown',e=>{e.preventDefault();flap();});scope.on(window,'keydown',e=>{if(e.code==='Space'&&!e.repeat&&!/INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName)){e.preventDefault();flap();}});
   loop(scope,dt=>{
     time+=dt;for(const p of explosion){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt;p.life-=dt;}explosion=explosion.filter(p=>p.life>0);if(!running||over)return;

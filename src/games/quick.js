@@ -1,4 +1,4 @@
-import {el,button,layout,session,random,store,gameTime} from '../core.js';
+import {celebrate,el,button,layout,session,random,store,gameTime} from '../core.js';
 import {rpsResult} from '../rules.js';
 import {workbench} from '../workbench.js';
 
@@ -11,7 +11,7 @@ export function mole(root){
   function hit(i){if(!running)return;if(i===target){score=bench.run('hit',{score});target=-1;next=gameTime()+160;}else score=Math.max(0,score-3);render();}
   function render(){buttons.forEach((b,i)=>{b.textContent=i===target?'◉':'·';b.classList.toggle('up',i===target);b.setAttribute('aria-label',`Hole ${i+1}${i===target?', mole visible':''}`);});status.textContent=`${score} points · ${running?Math.ceil(Math.max(0,until-gameTime())/1000)+' seconds':'Ready for a round?'}`;}
   for(let i=0;i<9;i++){const b=button('·',()=>hit(i));b.className='mole';buttons.push(b);grid.append(b);}stage.append(grid,status);const start=button('Start 30-second round',()=>{score=0;running=true;until=gameTime()+30000;next=0;start.disabled=true;},true);stage.append(start);
-  scope.interval(()=>{if(!running)return;const now=gameTime();if(now>=until){running=false;target=-1;start.disabled=false;render();status.textContent=`Time! ${score} points. Best: ${Math.max(store.get('mole.best',0),score)}`;store.set('mole.best',Math.max(store.get('mole.best',0),score));return;}if(now>=next){target=random(9);next=now+650;}render();},40);
+  scope.interval(()=>{if(!running)return;const now=gameTime();if(now>=until){running=false;target=-1;start.disabled=false;render();status.textContent=`Time! ${score} points. Best: ${Math.max(store.get('mole.best',0),score)}`;if(score>store.get('mole.best',0))celebrate(root,'New mole record!');store.set('mole.best',Math.max(store.get('mole.best',0),score));return;}if(now>=next){target=random(9);next=now+650;}render();},40);
   scope.on(window,'keydown',e=>{if(!/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&/^[1-9]$/.test(e.key))hit(Number(e.key)-1);});render();return()=>scope.dispose();
 }
 

@@ -1,4 +1,4 @@
-import {el,button,layout,session,canvas,loop,clamp,bestScore} from '../core.js';
+import {celebrate,el,button,layout,session,canvas,loop,clamp,bestScore} from '../core.js';
 import {assets} from '../assets.js';
 import {workbench} from '../workbench.js';
 export function railBounce(ball,ax,ay,bx,by,restitution=.82){
@@ -19,7 +19,7 @@ export function pinball(root){
   const ballSelect=el('select',{'aria-label':'Next ball type'},Object.entries(ballStyles).map(([value,{label}])=>el('option',{value,text:label})));
   const lightTracks=[[[64,260],[105,283],[65,305],[105,328],[63,350]],[[436,260],[395,283],[435,305],[395,328],[437,350]],[[148,505],[197,475],[250,505],[303,475],[352,505]]];
   function serve(){ball={x:461,y:620,vx:0,vy:0,r:8};waiting=true;launchAge=null;trail=[];}
-  function reset(){score=0;balls=3;over=false;multiplier=1;lit=new Set();flashes=[];particles=[];neonUntil=0;serve();}reset();
+  let recordScore;function reset(){recordScore=bestScore('pinball',0);score=0;balls=3;over=false;multiplier=1;lit=new Set();flashes=[];particles=[];neonUntil=0;serve();}reset();
   function launch(){if(over||!waiting)return;waiting=false;ballType=ballSelect.value;launchAge=0;saveUntil=time+4;}
   const bench=workbench(root,{title:'Pinball contacts and momentum',source:'src/games/pinball.js: railBounce()',getState:()=>({ball:{...ball},score,balls,waiting,multiplier,reactors:[...lit]}),rules:{bumper:{label:'Score after a reactor hit',initial:'score + 100 * multiplier',samples:[{score:0,multiplier:1}],validate:n=>Number.isFinite(n)&&n>=0}}});
   function spark(x,y,color){flashes.push({x,y,life:1,color});for(let i=0;i<18;i++){const a=Math.random()*Math.PI*2,v=40+Math.random()*140;particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.8,color});}shake=3;neonUntil=time+1.25;}
@@ -45,11 +45,12 @@ export function pinball(root){
     const step=dt*Number(speed.value)/6;
     for(let sub=0;sub<6;sub++){
       ball.vy+=300*step;ball.vx*=.9998;ball.x+=ball.vx*step;ball.y+=ball.vy*step;
-      for(const rail of staticRails)railBounce(ball,...rail);      for(let i=0;i<reactors.length;i++){const[x,y]=reactors[i],dx=ball.x-x,dy=ball.y-y,d=Math.hypot(dx,dy);if(d<36&&d>0){const nx=dx/d,ny=dy/d,v=ball.vx*nx+ball.vy*ny;ball.x=x+nx*37;ball.y=y+ny*37;if(v<0){ball.vx-=1.8*v*nx;ball.vy-=1.8*v*ny;ball.vx+=nx*60*style.kick;ball.vy+=ny*60*style.kick;score=bench.run('bumper',{score,multiplier});lit.add(i);spark(x,y,['#68eaff','#ff73ca','#efd26b'][i]);if(lit.size===3){multiplier=Math.min(5,multiplier+1);lit.clear();score+=500;}}}}
+      for(const rail of staticRails)railBounce(ball,...rail);
+      for(let i=0;i<reactors.length;i++){const[x,y]=reactors[i],dx=ball.x-x,dy=ball.y-y,d=Math.hypot(dx,dy);if(d<36&&d>0){const nx=dx/d,ny=dy/d,v=ball.vx*nx+ball.vy*ny;ball.x=x+nx*37;ball.y=y+ny*37;if(v<0){ball.vx-=1.8*v*nx;ball.vy-=1.8*v*ny;ball.vx+=nx*60*style.kick;ball.vy+=ny*60*style.kick;score=bench.run('bumper',{score,multiplier});lit.add(i);spark(x,y,['#68eaff','#ff73ca','#efd26b'][i]);if(lit.size===3){multiplier=Math.min(5,multiplier+1);lit.clear();score+=500;}}}}
       flippers().forEach((f,i)=>{if(railBounce(ball,...f,.88)){const angular=i===0?Math.abs(leftAngle-oldLeft):Math.abs(rightAngle-oldRight);if((i===0?left:right)&&angular>.002){const kick=Math.min(330,angular/Math.max(dt,.001)*25);ball.vy-=kick*style.kick;ball.vx+=(i===0?1:-1)*kick*.18;}}});
       const v=Math.hypot(ball.vx,ball.vy);if(v>style.speed){ball.vx*=style.speed/v;ball.vy*=style.speed/v;}
       if(ball.x<25){ball.x=25;ball.vx=Math.abs(ball.vx)*.8;}if(ball.x>475){ball.x=475;ball.vx=-Math.abs(ball.vx)*.8;}
-      if(ball.y>750){if(time<saveUntil){serve();launch();saveUntil=0;}else{balls--;if(!balls){over=true;waiting=true;}else serve();}break;}
+      if(ball.y>750){if(time<saveUntil){serve();launch();saveUntil=0;}else{balls--;if(!balls){over=true;waiting=true;if(score>recordScore)celebrate(root,'New pinball record!');}else serve();}break;}
     }
     trail.push({x:ball.x,y:ball.y});if(trail.length>22)trail.shift();
   },()=>{

@@ -1,4 +1,4 @@
-import {el,button,layout,session,canvas,loop,clamp,bestScore} from '../core.js';
+import {celebrate,el,button,layout,session,canvas,loop,clamp,bestScore} from '../core.js';
 import {workbench} from '../workbench.js';
 export function parkourCourse(difficulty='normal'){
   const gap=difficulty==='hard'?120:difficulty==='easy'?55:85;let x=0;
@@ -14,15 +14,35 @@ export function stickman(root){
   function jump(){if(finished||lives<=0||!player.jumps)return;player.vy=-470;player.jumps--;player.ground=false;}
   function dash(){if(player.cooldown>0||finished)return;player.dash=.16;player.cooldown=1.5;}
   scope.on(window,'keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(['a','ArrowLeft'].includes(e.key)){held.left=true;e.preventDefault();}if(['d','ArrowRight'].includes(e.key)){held.right=true;e.preventDefault();}if([' ','w','ArrowUp'].includes(e.key)&&!e.repeat){jump();e.preventDefault();}if(e.key==='Shift')dash();});scope.on(window,'keyup',e=>{if(['a','ArrowLeft'].includes(e.key))held.left=false;if(['d','ArrowRight'].includes(e.key))held.right=false;});scope.on(window,'blur',()=>{held.left=false;held.right=false;});
-  const touch=el('div',{class:'touch-controls'});for(const[key,label]of[['left','Left'],['right','Right']]){const b=button(label,()=>{});b.classList.add('direction-key','direction-'+key);scope.on(b,'pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);held[key]=true;});scope.on(b,'pointerup',()=>held[key]=false);scope.on(b,'pointercancel',()=>held[key]=false);touch.append(b);}touch.append(button('Jump',jump),button('Dash',dash));stage.append(touch);
+  const knob=el('span',{class:'parkour-knob','aria-hidden':'true'});
+  const stick=el('div',{class:'parkour-stick',role:'group','aria-label':'Drag left or right to run, up to jump, down to dash'},[knob]);
+  stage.classList.add('stickman-stage');
+  stage.append(el('div',{class:'parkour-touch'},[stick,el('small',{text:'← Run →   ↑ Jump   ↓ Dash'})]));
+  let pointer=null,vertical=0,touchX=0;
+  function release(){pointer=null;touchX=0;vertical=0;knob.style.transform='';}
+  function steer(e){
+    if(pointer!==e.pointerId)return;
+    const bounds=stick.getBoundingClientRect(),radius=bounds.width*.36;
+    const x=e.clientX-bounds.left-bounds.width/2,y=e.clientY-bounds.top-bounds.height/2;
+    const scale=Math.min(1,radius/Math.max(1,Math.hypot(x,y)));
+    knob.style.transform='translate('+x*scale+'px,'+y*scale+'px)';
+    touchX=clamp(x/radius,-1,1);if(Math.abs(touchX)<.24)touchX=0;
+    const next=y<-.65*radius?-1:y>.65*radius?1:0;
+    if(next&&next!==vertical){if(next<0)jump();else dash();globalThis.navigator?.vibrate?.(next<0?12:18);}
+    vertical=next;
+  }
+  scope.on(stick,'pointerdown',e=>{if(pointer!==null)return;e.preventDefault();pointer=e.pointerId;stick.setPointerCapture(pointer);steer(e);});
+  scope.on(stick,'pointermove',steer);
+  for(const name of ['pointerup','pointercancel','lostpointercapture'])scope.on(stick,name,e=>{if(e.pointerId===pointer)release();});
+  scope.on(window,'blur',release);
   loop(scope,dt=>{
     time+=dt;if(finished||lives<=0)return;
-    const oldBottom=player.y+46;player.cooldown=Math.max(0,player.cooldown-dt);player.dash=Math.max(0,player.dash-dt);player.vx=(held.right?1:0)-(held.left?1:0);player.vx*=player.dash>0?650:250;
+    const oldBottom=player.y+46;player.cooldown=Math.max(0,player.cooldown-dt);player.dash=Math.max(0,player.dash-dt);player.vx=touchX||(held.right?1:0)-(held.left?1:0);player.vx=player.dash>0?650*player.dashDir:250*player.vx;
     player.vy=player.dash>0?0:bench.run('gravity',{velocity:player.vy,dt});player.x=Math.max(0,player.x+player.vx*dt);player.y+=player.vy*dt;player.ground=false;
     for(let i=0;i<platforms.length;i++){const p=platforms[i];if(player.x+18>p.x&&player.x<p.x+p.w&&player.vy>=0&&oldBottom<=p.y+3&&player.y+46>=p.y){player.y=p.y-46;player.vy=0;player.jumps=2;player.ground=true;if(p.checkpoint)checkpoint=Math.max(checkpoint,i);}
       if(p.spike&&player.x+18>p.x+p.w/2-14&&player.x<p.x+p.w/2+14&&player.y+46>p.y-23&&player.y<p.y){lives--;spawn();break;}}
     if(player.y>650){lives--;spawn();}
-    const last=platforms.at(-1);if(player.x>last.x+last.w-45){finished=true;}
+    const last=platforms.at(-1);if(player.x>last.x+last.w-45){finished=true;celebrate(root,'Rooftop run complete!');}
     camera=Math.max(0,player.x-230);trail.push({x:player.x,y:player.y,dash:player.dash>0});if(trail.length>14)trail.shift();
   },()=>{
     ctx.fillStyle='#0c142b';ctx.fillRect(0,0,960,540);for(let layer=0;layer<3;layer++){ctx.fillStyle=['#18223b','#24314d','#2c4059'][layer];for(let i=0;i<14;i++){const x=((i*110-camera*(.15+layer*.15))%1600+1600)%1600-160,h=80+(i*43+layer*35)%150;ctx.fillRect(x,500-h,80,h);ctx.fillStyle='#f9d28b55';for(let y=510-h;y<490;y+=22)ctx.fillRect(x+12,y,7,9);ctx.fillStyle=['#18223b','#24314d','#2c4059'][layer];}}

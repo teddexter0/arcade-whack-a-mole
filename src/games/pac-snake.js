@@ -1,4 +1,4 @@
-import {el,button,layout,session,canvas,directions,loop,drawSnakeFace} from '../core.js';
+import {celebrate,el,button,layout,session,canvas,directions,loop,drawSnakeFace} from '../core.js';
 import {workbench} from '../workbench.js';
 export const mazeWall=(x,y)=>x<1||y<1||x>25||y>19||((y===5||y===15)&&x>4&&x<22&&x!==13)||((x===8||x===18)&&y>7&&y<13);
 const vectors=[[1,0],[0,1],[-1,0],[0,-1]],same=(a,b)=>a[0]===b[0]&&a[1]===b[1];
@@ -26,7 +26,7 @@ export function pacSnake(root){
   const hit=body.findIndex(p=>same(p,head));if(hit>=0&&immune<=0){if(power>0&&hit===body.length-1){body.pop();points+=200;immune=.25;if(body.length<2){over=true;won=role.value==='chomper';}}else if(power<=0){if(role.value==='snake')points+=250;lose();}}
   if(!pellets.length){over=true;won=role.value==='chomper';}
  }
- loop(scope,dt=>{if(over)return;power=Math.max(0,power-dt);immune=Math.max(0,immune-dt);elapsed+=dt;const speed={easy:.16,normal:.12,hard:.085}[difficulty.value];if(elapsed>=speed){elapsed-=speed;tick();}},()=>{
+ loop(scope,dt=>{if(over)return;power=Math.max(0,power-dt);immune=Math.max(0,immune-dt);elapsed+=dt;const speed={easy:.16,normal:.12,hard:.085}[difficulty.value];if(elapsed>=speed){elapsed-=speed;tick();if(over&&won)celebrate(root,'You win!');}},()=>{
   ctx.fillStyle='#040b1b';ctx.fillRect(0,0,810,630);for(let y=0;y<21;y++)for(let x=0;x<27;x++)if(mazeWall(x,y)){ctx.fillStyle='#0e294a';ctx.fillRect(x*30+2,y*30+2,26,26);ctx.strokeStyle='#2e8edb';ctx.strokeRect(x*30+3,y*30+3,24,24);}
   for(const[x,y,big]of pellets){ctx.fillStyle=big?'#ff8950':'#abc0d0';ctx.beginPath();ctx.arc(x*30+15,y*30+15,big?7:2,0,7);ctx.fill();}
   body.forEach(([x,y],i)=>{ctx.shadowBlur=12;ctx.shadowColor=power>0?'#608fff':'#a4ff51';ctx.fillStyle=power>0?'#608fff':i===0?'#d9ff9b':'#76c638';ctx.beginPath();ctx.roundRect(x*30+3,y*30+3,24,24,7);ctx.fill();});ctx.shadowBlur=0;

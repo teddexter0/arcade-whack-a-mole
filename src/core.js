@@ -121,3 +121,17 @@ export function drawSnakeFace(ctx,x,y,size,direction) {
   }
   ctx.restore();
 }
+
+export function celebrate(root,title='You win!',assemble=false){
+  root.querySelector('.pinata-win')?.remove();
+  const layer=el('div',{class:'pinata-win'+(assemble?' assemble-win':''),role:'status'},[
+    el('strong',{class:'pinata-title',text:title}),
+    el('span',{class:'pinata-center','aria-hidden':'true',text:'✦'})
+  ]);
+  for(let i=0;i<54;i++){
+    const angle=i/54*Math.PI*2, distance=95+random(260);
+    layer.append(el('i',{'aria-hidden':'true',style:'--x:'+Math.cos(angle)*distance+'px;--y:'+Math.sin(angle)*distance+'px;--h:'+(i*47%360)+';--spin:'+(180+random(640))+'deg;--delay:'+random(180)+'ms'}));
+  }
+  layer.addEventListener('animationend',event=>{if(event.target===layer)layer.remove();});
+  root.append(layer);
+}
